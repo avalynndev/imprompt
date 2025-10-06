@@ -10,8 +10,6 @@
     "package": "plasmo package"
   },
   "dependencies": {
-    "@ai-sdk/google": "^1.2.22",
-    "@google/generative-ai": "^0.24.1",
     "@plasmohq/messaging": "^0.6.2",
     "@plasmohq/redux-persist": "^6.1.0",
     "@plasmohq/storage": "^1.10.0",
@@ -26,7 +24,6 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "@reduxjs/toolkit": "^2.2.3",
     "@supabase/supabase-js": "^2.43.1",
-    "ai": "^4.3.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.0",
@@ -73,6 +70,7 @@
       "activeTab",
       "storage"
     ],
+    "minimum_chrome_version": "138",
     "web_accessible_resources": [
       {
         "resources": [

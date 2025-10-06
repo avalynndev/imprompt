@@ -4,8 +4,37 @@ const isChatGPT = window.location.hostname.includes("chatgpt.com");
 const isGemini = window.location.hostname.includes("gemini.google.com");
 const isClaude = window.location.hostname.includes("claude.ai");
 
-const BACKEND_URL =
-  process.env.PLASMO_PUBLIC_BACKEND_URL || "http://localhost:3001";
+async function enhancePromptWithGemini(userPrompt: string) {
+  const session = await (window as any).LanguageModel.create({
+    systemPrompt: "You are an expert prompt engineer.",
+    temperature: 0.7,
+    topK: 3,
+    outputLanguage: "en",
+  });
+
+  const enhancementPrompt = `You are an expert prompt engineer. Rewrite the following user prompt so it follows best practices for effective AI prompts:
+- Preserve the original intent exactly.
+- If the input is short but meaningful, polish it without making it too long, but necessarily long.
+- If the input is vague, incomplete, or random text (like "asda"), do NOT add explanations or criticism — simply return it unchanged.
+- If the input is long, you may restructure, expand, or clarify it as needed to make it more effective and actionable.
+- Use clear, direct, and natural phrasing.
+- Output only the improved prompt, nothing else.
+
+Original Prompt:
+${userPrompt}
+
+Improved Prompt:`;
+
+  try {
+    const response = await session.prompt(enhancementPrompt);
+    await session.destroy();
+    return response.trim();
+  } catch (e) {
+    console.error("LanguageModel Error:", e);
+    await session.destroy();
+    throw e;
+  }
+}
 
 function Main() {
   useEffect(() => {
@@ -15,10 +44,29 @@ function Main() {
       let inputAreaContainers = [];
 
       if (isChatGPT) {
-        const composerTrailingActions = document.querySelectorAll(
-          '[data-testid="composer-trailing-actions"]'
+        const trailingContainers = document.querySelectorAll(
+          'form.group\\/composer [grid-area="trailing"], form.group\\/composer .flex.items-center.gap-1\\.5'
         );
-        inputAreaContainers = Array.from(composerTrailingActions);
+        inputAreaContainers = Array.from(trailingContainers);
+
+        if (inputAreaContainers.length === 0) {
+          const voiceButtons = document.querySelectorAll(
+            '[data-testid="composer-speech-button"]'
+          );
+          voiceButtons.forEach((button) => {
+            let parent = button.parentElement;
+            while (parent && parent !== document.body) {
+              if (
+                parent.classList.contains("flex") &&
+                parent.classList.contains("items-center")
+              ) {
+                inputAreaContainers.push(parent.parentElement || parent);
+                break;
+              }
+              parent = parent.parentElement;
+            }
+          });
+        }
       } else if (isClaude) {
         const sendButtons = document.querySelectorAll(
           'button[aria-label="Send message"]'
@@ -139,6 +187,21 @@ function Main() {
 
         enhanceButton.style.cssText = buttonStyles;
 
+        if (!document.getElementById("imprompt-spin-animation")) {
+          const style = document.createElement("style");
+          style.id = "imprompt-spin-animation";
+          style.textContent = `
+            @keyframes imprompt-spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(-360deg); }
+            }
+            .imprompt-spinning {
+              animation: imprompt-spin 1s linear infinite;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+
         enhanceButton.addEventListener("click", async (e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -157,68 +220,45 @@ function Main() {
             return;
           }
 
+          if (currentText.length > 5000) {
+            alert("Prompt too long. Maximum 5000 characters allowed.");
+            return;
+          }
+
           enhanceButton.disabled = true;
-          enhanceButton.innerHTML = "🔄";
+          enhanceButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="imprompt-spinning">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+          `;
           enhanceButton.style.opacity = "0.7";
           enhanceButton.style.cursor = "not-allowed";
 
           try {
-            // Call your backend instead of directly using the API
-            const response = await fetch(`${BACKEND_URL}/api/enhance-prompt`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                prompt: currentText,
-              }),
-            });
+            const improvedText = await enhancePromptWithGemini(currentText);
 
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(
-                errorData.error || `HTTP error! status: ${response.status}`
-              );
+            if ((isChatGPT || isClaude) && textarea) {
+              textarea.textContent = improvedText;
+              if (isClaude) {
+                textarea.innerHTML = improvedText;
+              }
+            } else if (textarea instanceof HTMLTextAreaElement) {
+              textarea.value = improvedText;
+            } else if (textarea) {
+              textarea.textContent = improvedText;
             }
 
-            // Handle streaming response
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let streamedText = "";
-
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-
-              const textPart = decoder.decode(value, { stream: true });
-              streamedText += textPart;
-
-              // Update textarea with streamed content
-              if ((isChatGPT || isClaude) && textarea) {
-                textarea.textContent = streamedText;
-                // For Claude, also try setting innerHTML as backup
-                if (isClaude) {
-                  textarea.innerHTML = streamedText;
-                }
-              } else if (textarea instanceof HTMLTextAreaElement) {
-                textarea.value = streamedText;
-              } else if (textarea) {
-                textarea.textContent = streamedText;
-              }
-
-              // Trigger input events
-              if (textarea) {
-                textarea.dispatchEvent(new Event("input", { bubbles: true }));
-                textarea.dispatchEvent(new Event("change", { bubbles: true }));
-                // Additional events for Claude
-                if (isClaude) {
-                  textarea.dispatchEvent(
-                    new KeyboardEvent("keydown", { bubbles: true })
-                  );
-                  textarea.dispatchEvent(
-                    new KeyboardEvent("keyup", { bubbles: true })
-                  );
-                }
+            if (textarea) {
+              textarea.dispatchEvent(new Event("input", { bubbles: true }));
+              textarea.dispatchEvent(new Event("change", { bubbles: true }));
+              if (isClaude) {
+                textarea.dispatchEvent(
+                  new KeyboardEvent("keydown", { bubbles: true })
+                );
+                textarea.dispatchEvent(
+                  new KeyboardEvent("keyup", { bubbles: true })
+                );
               }
             }
 
@@ -230,13 +270,14 @@ function Main() {
             console.error("Error enhancing prompt:", error);
 
             let errorMessage = "Error enhancing prompt. Please try again.";
-            if (error.message.includes("Rate limit")) {
+            if (error.message && error.message.includes("API key not found")) {
               errorMessage =
-                "Rate limit reached. Please wait before trying again.";
-            } else if (error.message.includes("Failed to fetch")) {
+                "Please set your Gemini API key in the extension popup first.";
+            } else if (error.message && error.message.includes("API key")) {
               errorMessage =
-                "Cannot connect to enhancement service. Please check your connection.";
-              console.log(error);
+                "Invalid API key. Please check your configuration in the extension popup.";
+            } else if (error.message && error.message.includes("quota")) {
+              errorMessage = "API quota exceeded. Please try again later.";
             }
 
             alert(errorMessage);
@@ -251,7 +292,6 @@ function Main() {
           }
         });
 
-        // Insert the enhance button in the correct place for each platform
         try {
           if (isChatGPT) {
             container.insertBefore(enhanceButton, container.firstChild);
@@ -279,7 +319,6 @@ function Main() {
           }
         } catch (error) {
           console.error("Error inserting button:", error);
-          // Fallback: just append to container
           try {
             container.appendChild(enhanceButton);
           } catch (fallbackError) {
@@ -292,10 +331,8 @@ function Main() {
       });
     };
 
-    // Run initially with a small delay to ensure DOM is ready
     setTimeout(setupObserver, 100);
 
-    // Set up mutation observer to handle dynamic content
     const observer = new MutationObserver(() => {
       setTimeout(setupObserver, 50);
     });
@@ -314,7 +351,7 @@ function Main() {
     return null;
   }
 
-  return null; // The button is injected directly into the DOM
+  return null;
 }
 
 export default Main;

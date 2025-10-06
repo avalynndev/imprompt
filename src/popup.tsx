@@ -11,30 +11,15 @@ import KoFiLogo, {
 
 function Popup() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [geminiKey, setGeminiKey] = useState("");
-  const [saveStatus, setSaveStatus] = useState("");
 
   useEffect(() => {
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
-
-    chrome.storage.sync.get("geminiKey", (data) => {
-      if (data.geminiKey) {
-        setGeminiKey(data.geminiKey);
-      }
-    });
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
-  };
-
-  const handleSaveKey = () => {
-    chrome.storage.sync.set({ geminiKey }, () => {
-      setSaveStatus("API Key saved successfully!");
-      setTimeout(() => setSaveStatus(""), 2000);
-    });
-  };
+  }
 
   const aiModels = [
     { name: "ChatGPT", icon: <OpenAILogo className="h-4 w-4" /> },
@@ -44,7 +29,6 @@ function Popup() {
 
   return (
     <div className="relative flex flex-col items-center justify-center w-[350px] p-6 gap-6 bg-gradient-to-br from-pink-100 via-indigo-100 to-blue-100 dark:from-[#1f1f2e] dark:via-[#2b2b3c] dark:to-[#1f1f2e]">
-      {/* Theme toggle button in top right */}
       <Button
         variant="ghost"
         size="icon"
@@ -73,7 +57,6 @@ function Popup() {
         </svg>
         <span className="sr-only">Toggle theme</span>
       </Button>
-      {/* Main content */}{" "}
       <a
         href="https://github.com/avalynndev/imprompt"
         target="_blank"
@@ -88,7 +71,6 @@ function Popup() {
         </Button>
       </a>
       <div className="flex flex-col items-center gap-2">
-        {" "}
         <svg
           width="24"
           height="24"
@@ -111,7 +93,6 @@ function Popup() {
         </span>
       </div>
       <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
-        {/* Ko-Fi Donate Button */}
         <div className="flex justify-center">
           <Button
             disabled
@@ -121,8 +102,6 @@ function Popup() {
             <span className="font-medium">Donate (Ko-fi)</span>
           </Button>
         </div>
-
-        {/* AI Models Card */}
         <div className="flex flex-col items-center gap-4 w-full bg-muted/30 backdrop-blur-md border border-muted p-6 rounded-2xl shadow-lg">
           <span className="text-xl font-bold tracking-tight text-muted-foreground">
             Supported Models
