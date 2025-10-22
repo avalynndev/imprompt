@@ -34,7 +34,6 @@
     "react-dom": "18.2.0",
     "react-hotkeys-hook": "^4.5.0",
     "react-intersection-observer": "^9.10.1",
-    "react-markdown": "^9.0.1",
     "react-textarea-autosize": "^8.5.3",
     "redux-persist-webextension-storage": "^1.0.2",
     "remark-gfm": "^4.0.0",
@@ -61,13 +60,15 @@
   "manifest": {
     "key": "$CRX_KEY",
     "host_permissions": [
-      "https://chatgpt.com/*",
-      "https://claude.ai/*",
-      "https://gemini.google.com/*",
-      "https://c/*"
+      "<all_urls>",
+      "*://*/*",
+      "https://*/*",
+      "http://*/*"
     ],
     "permissions": [
-      "scripting", "tabs", "activeTab",
+      "scripting",
+      "tabs",
+      "activeTab",
       "storage",
       "sidePanel"
     ],
