@@ -1,15 +1,14 @@
-import { useState } from "react";
-import { Button } from "../components/ui/button";
-import { Textarea } from "../components/ui/textarea";
-import { Card, CardContent } from "../components/ui/card";
-import "../style.css"
+import { useState, useRef, useEffect } from "react";
+import { Button } from "~/components/ui/button";
+import { Textarea } from "~/components/ui/textarea";
+import { Send, Sparkles } from "lucide-react";
+import "~/style.css";
 
 function MarkdownContent({ content }: { content: string }) {
   const renderMarkdown = (text: string) => {
     const lines = text.split("\n");
     const elements: JSX.Element[] = [];
     let listItems: string[] = [];
-    let inList = false;
 
     const flushList = () => {
       if (listItems.length > 0) {
@@ -23,7 +22,6 @@ function MarkdownContent({ content }: { content: string }) {
           </ul>
         );
         listItems = [];
-        inList = false;
       }
     };
 
@@ -75,24 +73,19 @@ function MarkdownContent({ content }: { content: string }) {
             {processInlineMarkdown(line.slice(2))}
           </h1>
         );
-      }
-      else if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
-        inList = true;
+      } else if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
         listItems.push(line.trim().slice(2));
-      }
-      else if (line.trim() === "---") {
+      } else if (line.trim() === "---") {
         flushList();
         elements.push(<hr key={idx} className="my-4 border-border" />);
-      }
-      else if (line.trim()) {
+      } else if (line.trim()) {
         flushList();
         elements.push(
           <p key={idx} className="mb-2">
             {processInlineMarkdown(line)}
           </p>
         );
-      }
-      else {
+      } else {
         flushList();
       }
     });
@@ -104,44 +97,90 @@ function MarkdownContent({ content }: { content: string }) {
   return <div className="space-y-1">{renderMarkdown(content)}</div>;
 }
 
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export default function SidePanel() {
-  const [aiResponse, setAiResponse] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [userQuestion, setUserQuestion] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [pageContext, setPageContext] = useState<string>("");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  async function runGeminiPrompt(prompt: string) {
-    console.log("🧠 Creating Gemini session...");
-    const session = await (window as any).LanguageModel.create({
-      systemPrompt:
-        "You are an expert AI assistant that analyzes and answers questions about webpages. Always format your responses in clear, readable markdown.",
-      temperature: 0.7,
-      topK: 3,
-      outputLanguage: "en",
-    });
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    try {
-      console.log("⚡ Sending prompt to Gemini:", prompt.slice(0, 200) + "...");
-      const response = await session.prompt(prompt);
-      console.log("✅ Gemini response received.");
-      await session.destroy();
-      return response.trim();
-    } catch (e) {
-      console.error("❌ LanguageModel Error:", e);
-      await session.destroy();
-      throw e;
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  async function runGeminiPrompt(prompt: string, retries = 2) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const session = await (window as any).LanguageModel.create({
+          systemPrompt:
+            "You are a helpful AI assistant analyzing webpages. Be precise and factual. CRITICAL: Only state information that is directly present in the provided context. If you cannot find specific information in the context, explicitly say so rather than making assumptions or generating plausible-sounding but unverified information. When discussing code, only mention code patterns and technologies that are explicitly shown in the provided code blocks.",
+          temperature: 0.3,
+          topK: 2,
+        });
+
+        try {
+          const response = await session.prompt(prompt);
+          await session.destroy();
+
+          const lowerResponse = response.toLowerCase();
+          if (
+            lowerResponse.includes("i don't have enough") ||
+            lowerResponse.includes("insufficient") ||
+            lowerResponse.includes("cannot analyze") ||
+            lowerResponse.includes("not enough information") ||
+            lowerResponse.includes("unable to provide")
+          ) {
+            if (attempt < retries) {
+              continue;
+            }
+            return "Based on the available information:\n\n" + response.trim();
+          }
+
+          return response.trim();
+        } catch (e) {
+          await session.destroy();
+          throw e;
+        }
+      } catch (e) {
+        if (attempt === retries) {
+          throw new Error(
+            "Failed to get response from Gemini. Please try again."
+          );
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     }
+
+    throw new Error("Failed to get response from Gemini");
   }
 
   async function analyzePage() {
-    console.log("🚀 analyzePage triggered");
     setLoading(true);
-    setError(null);
-    setAiResponse("");
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: "Analyze this page" },
+    ]);
 
     try {
-      console.log("📩 Getting active tab...");
       const [tab] = await chrome.tabs.query({
         active: true,
         currentWindow: true,
@@ -151,12 +190,12 @@ export default function SidePanel() {
         throw new Error("No active tab found");
       }
 
-      console.log("💉 Executing script directly...");
       const result = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
           const title = document.title;
           const url = location.href;
+          const lang = document.documentElement.lang || "en";
 
           const metaDesc = document.querySelector('meta[name="description"]');
           const desc = metaDesc ? (metaDesc as HTMLMetaElement).content : "";
@@ -166,208 +205,334 @@ export default function SidePanel() {
             ? (metaKeywords as HTMLMetaElement).content
             : "";
 
-          const ogTitle = document.querySelector('meta[property="og:title"]');
-          const openGraphTitle = ogTitle
-            ? (ogTitle as HTMLMetaElement).content
-            : "";
-
           const ogType = document.querySelector('meta[property="og:type"]');
           const pageType = ogType ? (ogType as HTMLMetaElement).content : "";
 
           const h1s = Array.from(document.querySelectorAll("h1"))
             .map((h) => h.textContent?.trim())
             .filter(Boolean);
+
           const h2s = Array.from(document.querySelectorAll("h2"))
             .map((h) => h.textContent?.trim())
             .filter(Boolean)
-            .slice(0, 10);
+            .slice(0, 12);
 
           const links = Array.from(document.querySelectorAll("a[href]"))
-            .map((a) => ({
-              text: a.textContent?.trim(),
-              href: (a as HTMLAnchorElement).href,
-            }))
-            .filter((l) => l.text && l.text.length > 0)
+            .map((a) => a.textContent?.trim())
+            .filter((t) => t && t.length > 0)
             .slice(0, 20);
 
-          const images = Array.from(document.querySelectorAll("img[src]"))
-            .map((img) => ({
-              alt: (img as HTMLImageElement).alt,
-              src: (img as HTMLImageElement).src,
-            }))
-            .slice(0, 10);
+          const images = Array.from(document.querySelectorAll("img[alt]"))
+            .map((img) => (img as HTMLImageElement).alt)
+            .filter(Boolean)
+            .slice(0, 15);
 
-          const text = document.body.innerText.slice(0, 15000);
+          const codeBlocks: Array<{ language: string; code: string }> = [];
+
+          document.querySelectorAll("pre code, pre").forEach((el) => {
+            const codeText = el.textContent?.trim();
+            if (codeText && codeText.length > 15 && codeText.length < 3000) {
+              const className =
+                el.className || el.parentElement?.className || "";
+              const langMatch = className.match(
+                /language-(\w+)|lang-(\w+)|highlight-(\w+)/
+              );
+              const language = langMatch
+                ? langMatch[1] || langMatch[2] || langMatch[3]
+                : "code";
+
+              codeBlocks.push({
+                language,
+                code: codeText.slice(0, 1200),
+              });
+            }
+          });
+
+          const text = document.body.innerText.slice(0, 12000);
 
           const article = document.querySelector("article");
           const main = document.querySelector("main");
           const mainContent = article?.innerText || main?.innerText || "";
 
+          const paragraphs = Array.from(document.querySelectorAll("p"))
+            .map((p) => p.textContent?.trim())
+            .filter((p) => p && p.length > 40)
+            .slice(0, 20);
+
           return {
             title,
             url,
+            lang,
             desc,
             keywords,
-            openGraphTitle,
             pageType,
             h1s,
-            h2s: h2s.slice(0, 8),
-            links: links.slice(0, 15),
-            images: images.slice(0, 8),
+            h2s,
+            links,
+            images,
+            codeBlocks: codeBlocks.slice(0, 4),
             text,
-            mainContent: mainContent.slice(0, 10000),
-            hasArticle: !!article,
-            hasMain: !!main,
+            mainContent: mainContent.slice(0, 8000),
+            paragraphs,
           };
         },
       });
 
       const response = result[0].result;
-      console.log("✅ Page context received:", response);
 
       const context = `
-# Page Information
-- **Title**: ${response.title}
-- **URL**: ${response.url}
-- **Description**: ${response.desc}
-${response.keywords ? `- **Keywords**: ${response.keywords}` : ""}
-${response.pageType ? `- **Type**: ${response.pageType}` : ""}
-
-${response.h1s.length > 0 ? `## Main Headings\n${response.h1s.map((h) => `- ${h}`).join("\n")}` : ""}
-
-${response.h2s.length > 0 ? `## Subheadings\n${response.h2s.map((h) => `- ${h}`).join("\n")}` : ""}
-
-${response.mainContent ? `## Main Content\n${response.mainContent}` : `## Full Content\n${response.text}`}
+# Page: ${response.title}
+URL: ${response.url}
+${response.desc ? `Description: ${response.desc}` : ""}
+${response.keywords ? `Keywords: ${response.keywords}` : ""}
+${response.pageType ? `Type: ${response.pageType}` : ""}
 
 ${
-  response.links.length > 0
-    ? `## Key Links\n${response.links
-        .slice(0, 10)
-        .map((l) => `- [${l.text}](${l.href})`)
+  response.h1s.length > 0
+    ? `## Headings\n${response.h1s
+        .slice(0, 3)
+        .map((h: string) => `- ${h}`)
         .join("\n")}`
     : ""
 }
+
+${
+  response.h2s.length > 0
+    ? `## Subheadings\n${response.h2s
+        .slice(0, 6)
+        .map((h: string) => `- ${h}`)
+        .join("\n")}`
+    : ""
+}
+
+${response.codeBlocks && response.codeBlocks.length > 0 ? `## Code Found\n${response.codeBlocks.map((block: any, i: number) => `Language: ${block.language}\n\`\`\`\n${block.code}\n\`\`\``).join("\n\n")}` : ""}
+
+${
+  response.paragraphs && response.paragraphs.length > 0
+    ? `## Content\n${response.paragraphs
+        .slice(0, 10)
+        .map((p: string) => p.slice(0, 250))
+        .join("\n\n")}`
+    : ""
+}
+
+${response.mainContent ? response.mainContent.slice(0, 6000) : response.text.slice(0, 6000)}
 `;
 
       setPageContext(context);
 
-      const prompt = `
-Analyze this webpage and provide:
+      const prompt = `Analyze this webpage. Provide ONLY information that is explicitly present in the context below. Do not infer, assume, or generate information that isn't directly stated.
 
 ## Summary
-Write a 2-3 sentence overview of what this page is about.
+2-3 sentences about what this page contains based solely on the provided information.
 
 ## Key Topics
-List the main topics, entities, or subjects discussed (bullet points).
+List topics that are explicitly mentioned in the content.
 
-## Page Intent
-Identify the primary purpose (e.g., blog post, product page, documentation, news article, forum discussion, etc.).
+## Technical Details
+ONLY if code is shown above: What language and what does the actual code do? Be specific about the code you can see.
 
-## Notable Insights
-Highlight 2-3 interesting or important takeaways from the content.
+## Notable Points
+2-3 observations based strictly on the content provided.
 
+Context:
 ${context}`;
 
-      console.log("🧠 Sending context to Gemini...");
       const aiResult = await runGeminiPrompt(prompt);
-      setAiResponse(aiResult);
-      console.log("✅ AI analysis complete.");
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: aiResult },
+      ]);
     } catch (e: any) {
-      console.error("❌ analyzePage error:", e);
-      setError(e.message || String(e));
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Error: ${e.message || "Failed to analyze page"}`,
+        },
+      ]);
     } finally {
-      console.log("🏁 analyzePage finished");
       setLoading(false);
     }
   }
 
   async function askQuestion() {
-    if (!userQuestion.trim()) {
-      console.warn("⚠️ Tried to ask empty question.");
-      return;
-    }
+    if (!userQuestion.trim() || !pageContext) return;
 
-    console.log("💬 Asking follow-up question:", userQuestion);
+    const question = userQuestion.trim();
+    setUserQuestion("");
     setLoading(true);
-    setError(null);
+    setMessages((prev) => [...prev, { role: "user", content: question }]);
 
     try {
-      const prompt = `
-Based on the webpage analysis below, answer this question:
+      const prompt = `Answer this question using ONLY the information in the context below. If the answer is not in the context, say so explicitly.
 
-**Question**: ${userQuestion}
+Question: ${question}
 
-Provide a clear, factual answer using only the context provided. Format your response in markdown.
-
-${pageContext}`;
+Context:
+${pageContext.slice(0, 10000)}`;
 
       const response = await runGeminiPrompt(prompt);
-      console.log("✅ Gemini follow-up response received.");
-
-      setAiResponse(
-        (prev) =>
-          prev + `\n\n---\n\n### 💬 Question: ${userQuestion}\n\n${response}`
-      );
-      setUserQuestion("");
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: response },
+      ]);
     } catch (e: any) {
-      console.error("❌ askQuestion error:", e);
-      setError(e.message || String(e));
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Error: ${e.message || "Failed to get response"}`,
+        },
+      ]);
     } finally {
-      console.log("🏁 askQuestion finished");
       setLoading(false);
     }
   }
 
   return (
-    <div className="p-4 w-full bg-background text-foreground h-full overflow-y-auto">
-      <Card>
-        <CardContent className="flex flex-col gap-4 p-4">
-          <div>
-            <h2 className="text-xl font-bold">AI Page Analyzer</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Analyze the current page using Gemini Nano
+    <div className="flex flex-col w-full h-[100vh] dark:bg-gradient-to-br bg-background dark:from-[#1f1f2e] dark:via-[#2b2b3c] dark:to-[#1f1f2e]">
+      <div className="flex-none p-4 border-b backdrop-blur-xl dark:border-white sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+            <h2 className="text-lg font-semibold tracking-tight">
+              Content Insights
+            </h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            title="Toggle theme"
+            className="h-8 w-8"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+              <path d="M12 3l0 18" />
+              <path d="M12 9l4.65 -4.65" />
+              <path d="M12 14.3l7.37 -7.37" />
+              <path d="M12 19.6l8.85 -8.85" />
+            </svg>
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Gain insights and interact with any page in real time.
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+        {messages.length === 0 && !loading && (
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground px-6">
+            <Sparkles className="w-12 h-12 mb-4 opacity-40 animate-pulse" />
+            <p className="text-sm max-w-sm">
+              Click the{" "}
+              <span className="font-medium text-primary">Analyze Page</span>{" "}
+              button below to begin.
             </p>
           </div>
+        )}
 
-          <Button onClick={analyzePage} disabled={loading} className="w-full">
-            {loading ? "Analyzing…" : "🔍 Analyze Current Page"}
-          </Button>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
-              {error}
-            </div>
-          )}
-
-          {aiResponse && (
-            <div className="border rounded-lg p-4 bg-muted/30 max-h-[450px] overflow-y-auto text-sm">
-              <MarkdownContent content={aiResponse} />
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2 pt-2 border-t">
-            <Textarea
-              placeholder="Ask a follow-up question about this page..."
-              value={userQuestion}
-              onChange={(e) => setUserQuestion(e.target.value)}
-              className="h-20 resize-none text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  askQuestion();
-                }
-              }}
-            />
-            <Button
-              onClick={askQuestion}
-              disabled={loading || !aiResponse}
-              className="w-full"
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`flex ${msg.role === "user" ? "justify-end py-2" : "justify-start"} transition-all`}
+          >
+            <div
+              className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm transition-all duration-200 ${
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground rounded-br-none"
+                  : "bg-muted text-foreground rounded-bl-none"
+              }`}
             >
-              {loading ? "Thinking…" : "💬 Ask Question"}
-            </Button>
+              {msg.role === "user" ? (
+                <p className="text-sm leading-relaxed">{msg.content}</p>
+              ) : (
+                <div className="text-sm leading-relaxed">
+                  <MarkdownContent content={msg.content} />
+                </div>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+
+        {loading && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-muted shadow-sm">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex gap-1">
+                  <div
+                    className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <div
+                    className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  />
+                  <div
+                    className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="flex-none p-4 border-t dark:border-white backdrop-blur-xl">
+        <div className="flex gap-2 mb-3">
+          <Button
+            onClick={analyzePage}
+            disabled={loading}
+            size="sm"
+            className="flex-1 font-medium bg-[#202020] dark:bg-[#E3D6C6] text-white dark:text-black transition-all hover:scale-[1.02]"
+          >
+            <Sparkles className="w-4 h-4 mr-2 animate-spin-slow" />
+            {loading ? "Analyzing..." : "Analyze Page"}
+          </Button>
+        </div>
+
+        <div className="relative">
+          <Textarea
+            placeholder="Ask a question about this page..."
+            value={userQuestion}
+            onChange={(e) => setUserQuestion(e.target.value)}
+            className="pr-12 resize-none rounded-xl shadow-inner focus:ring-2 focus:ring-primary/30 transition-all"
+            rows={2}
+            disabled={!pageContext || loading}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                askQuestion();
+              }
+            }}
+          />
+          <Button
+            onClick={askQuestion}
+            disabled={!userQuestion.trim() || !pageContext || loading}
+            size="icon"
+            className="absolute right-2 bottom-2 h-8 w-8 bg-[#202020] dark:bg-[#E3D6C6] text-white dark:text-black hover:scale-105 transition-all"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

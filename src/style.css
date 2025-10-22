@@ -71,23 +71,19 @@
   }
 }
 
-/* width */
 ::-webkit-scrollbar {
   width: 6px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
   @apply bg-background;
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-300;
   border-radius: 5px;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-400;
 }
@@ -108,11 +104,4 @@ h6,
 .text-2xl,
 .text-lg {
   font-family: 'Comfortaa', 'Palanquin Dark', 'Poppins', sans-serif;
-}
-
-/* Popup container rounding utility */
-.rounded-popup {
-  border-radius: 1.5rem;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
 }

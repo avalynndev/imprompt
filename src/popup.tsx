@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Button } from "~components/ui/button";
 import "~style.css";
 
-import KoFiLogo, {
+import {
   ClaudeLogo,
   OpenAILogo,
   GeminiLogo,
   GithubLogo,
 } from "~logo";
+import { Search } from "lucide-react";
 
 function Popup() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -93,25 +94,16 @@ function Popup() {
         </svg>
         <span className="text-2xl font-bold">Imprompt</span>
         <span className="text-muted-foreground text-center max-w-xs">
-          Instantly enhance your prompts for ChatGPT, Gemini, and more. Make
-          your AI interactions more effective and productive.
+          Enhance prompts across ai chat apps, translate any text, and analyze any page within the sidebar.
         </span>
       </div>
       <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
         <div className="flex justify-center">
           <Button
-            disabled
             className="flex items-center gap-2 bg-[#202020] dark:bg-[#E3D6C6] text-white dark:text-black"
-          >
-            <KoFiLogo className="h-5 w-5" />
-            <span className="font-medium">Donate (Ko-fi)</span>
-          </Button>
-        </div>
-        <div className="flex justify-center">
-          <Button
-            className="flex items-center gap-2"
             onClick={openSidePanel}
           >
+            <Search className="h-5 w-5" />
             Analyze Page
           </Button>
         </div>
