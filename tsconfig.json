@@ -1,7 +1,12 @@
 {
   "extends": "plasmo/templates/tsconfig.base",
   "exclude": ["node_modules"],
-  "include": [".plasmo/index.d.ts", "./**/*.ts", "./**/*.tsx", "postcss.config.js"],
+  "include": [
+    ".plasmo/index.d.ts",
+    "./**/*.ts",
+    "./**/*.tsx",
+    "postcss.config.js",
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "jsx": "react-jsx",

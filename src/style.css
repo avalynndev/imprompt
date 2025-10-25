@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Palanquin+Dark:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Palanquin+Dark:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -103,5 +103,5 @@ h6,
 .font-bold,
 .text-2xl,
 .text-lg {
-  font-family: 'Comfortaa', 'Palanquin Dark', 'Poppins', sans-serif;
+  font-family: "Comfortaa", "Palanquin Dark", "Poppins", sans-serif;
 }

@@ -27,12 +27,11 @@ async function enhancePromptWithGemini(userPrompt: string) {
     Other: "Optimize the prompt following general best practices.",
   }[site];
 
-const enhancementPrompt = `You are an expert prompt engineer. Improve the following user prompt according to these rules:
+  const enhancementPrompt = `You are an expert prompt engineer. Improve the following user prompt according to these rules:
 - Preserve the original meaning and purpose exactly.
 - ${platformPrompt}
 - Maintain **all code, markdown, formatting, and technical syntax exactly as provided** (do not delete, reformat, or modify code blocks, symbols, or indentation).
 - If the input contains code, **do not rewrite or simplify the code** — only clarify the text parts surrounding it if needed.
-- If the input is short but meaningful, polish it slightly without making it longer than necessary.
 - If the input is vague, incomplete, or random (like "asda"), return it unchanged.
 - If the input is long and text-heavy, you may restructure or clarify the textual parts to make it more actionable — but never touch any code blocks or inline code.
 - Never wrap your output in quotes or explanations — output only the improved prompt itself.
@@ -62,13 +61,13 @@ function Main() {
 
       if (isChatGPT) {
         const trailingContainers = document.querySelectorAll(
-          'form.group\\/composer [grid-area="trailing"], form.group\\/composer .flex.items-center.gap-1\\.5'
+          'form.group\\/composer [grid-area="trailing"], form.group\\/composer .flex.items-center.gap-1\\.5',
         );
         inputAreaContainers = Array.from(trailingContainers);
 
         if (inputAreaContainers.length === 0) {
           const voiceButtons = document.querySelectorAll(
-            '[data-testid="composer-speech-button"]'
+            '[data-testid="composer-speech-button"]',
           );
           voiceButtons.forEach((button) => {
             let parent = button.parentElement;
@@ -86,10 +85,10 @@ function Main() {
         }
       } else if (isClaude) {
         const sendButtons = document.querySelectorAll(
-          'button[aria-label="Send message"]'
+          'button[aria-label="Send message"]',
         );
         const modelSelectors = document.querySelectorAll(
-          '[data-testid="model-selector-dropdown"]'
+          '[data-testid="model-selector-dropdown"]',
         );
 
         sendButtons.forEach((sendButton) => {
@@ -135,8 +134,8 @@ function Main() {
       } else {
         inputAreaContainers = Array.from(
           document.querySelectorAll(
-            ".input-area-container, .chat-input, .composer, .PromptTextarea__Positioner"
-          )
+            ".input-area-container, .chat-input, .composer, .PromptTextarea__Positioner",
+          ),
         );
       }
 
@@ -148,17 +147,17 @@ function Main() {
           textarea = document.querySelector("#prompt-textarea");
         } else if (isClaude) {
           textarea = document.querySelector(
-            ".ProseMirror[contenteditable='true']"
+            ".ProseMirror[contenteditable='true']",
           );
 
           if (!textarea) {
             textarea = document.querySelector(
-              '[role="textbox"][contenteditable="true"]'
+              '[role="textbox"][contenteditable="true"]',
             );
           }
         } else {
           textarea = container.querySelector(
-            "textarea, [contenteditable='true'], [data-testid='chat-input'], .ql-editor"
+            "textarea, [contenteditable='true'], [data-testid='chat-input'], .ql-editor",
           );
         }
 
@@ -271,10 +270,10 @@ function Main() {
               textarea.dispatchEvent(new Event("change", { bubbles: true }));
               if (isClaude) {
                 textarea.dispatchEvent(
-                  new KeyboardEvent("keydown", { bubbles: true })
+                  new KeyboardEvent("keydown", { bubbles: true }),
                 );
                 textarea.dispatchEvent(
-                  new KeyboardEvent("keyup", { bubbles: true })
+                  new KeyboardEvent("keyup", { bubbles: true }),
                 );
               }
             }
@@ -316,7 +315,7 @@ function Main() {
             container.appendChild(enhanceButton);
           } else {
             const sendButton = container.querySelector(
-              ".send-button-container button.send-button, [data-testid='send-button'], .send-button"
+              ".send-button-container button.send-button, [data-testid='send-button'], .send-button",
             );
             if (
               sendButton &&
@@ -328,7 +327,7 @@ function Main() {
                 sendButtonContainer.parentElement;
               parentOfSendButtonContainer.insertBefore(
                 enhanceButton,
-                sendButtonContainer
+                sendButtonContainer,
               );
             } else {
               container.appendChild(enhanceButton);
@@ -341,7 +340,7 @@ function Main() {
           } catch (fallbackError) {
             console.error(
               "Failed to add button even with fallback:",
-              fallbackError
+              fallbackError,
             );
           }
         }

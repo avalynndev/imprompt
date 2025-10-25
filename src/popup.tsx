@@ -2,22 +2,17 @@ import { useEffect, useState } from "react";
 import { Button } from "~components/ui/button";
 import "~style.css";
 
-import {
-  ClaudeLogo,
-  OpenAILogo,
-  GeminiLogo,
-  GithubLogo,
-} from "~logo";
+import { ClaudeLogo, OpenAILogo, GeminiLogo, GithubLogo } from "~logo";
 import { Search } from "lucide-react";
 
 function Popup() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
-   const openSidePanel = async () => {
-     const currentWindow = await chrome.windows.getCurrent();
-     chrome.sidePanel.open({ windowId: currentWindow.id });
-     window.close();
-   };
+  const openSidePanel = async () => {
+    const currentWindow = await chrome.windows.getCurrent();
+    chrome.sidePanel.open({ windowId: currentWindow.id });
+    window.close();
+  };
   useEffect(() => {
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
@@ -25,7 +20,7 @@ function Popup() {
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
-  }
+  };
 
   const aiModels = [
     { name: "ChatGPT", icon: <OpenAILogo className="h-4 w-4" /> },
@@ -94,7 +89,8 @@ function Popup() {
         </svg>
         <span className="text-2xl font-bold">Imprompt</span>
         <span className="text-muted-foreground text-center max-w-xs">
-          Enhance prompts across ai chat apps, translate any text, and analyze any page within the sidebar.
+          Enhance prompts across ai chat apps, translate any text, and analyze
+          any page within the sidebar.
         </span>
       </div>
       <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
@@ -108,8 +104,8 @@ function Popup() {
           </Button>
         </div>
         <div className="flex flex-col items-center gap-4 w-full bg-muted/30 backdrop-blur-md border border-muted p-6 rounded-2xl shadow-lg">
-          <span className="text-xl font-bold tracking-tight text-muted-foreground">
-            Supported Models
+          <span className="font-bold tracking-tight text-muted-foreground">
+            Supported Models for Prompt Enhancing
           </span>
           <ul className=" grid grid-cols-2 gap-3 w-full">
             {aiModels.map((model) => (
@@ -125,16 +121,6 @@ function Popup() {
                 </span>
               </li>
             ))}
-            <a
-              href="https://github.com/avalynndev/imprompt#Supported-Models"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 p-3 px-4 h-11 bg-muted rounded-xl hover:bg-muted/60 transition-all duration-200 group"
-            >
-              <Button className="flex items-center gap-3 h-11 bg-muted rounded-xl hover:bg-muted/60 w-full dark:text-white text-black">
-                + more
-              </Button>
-            </a>
           </ul>
         </div>
       </div>

@@ -19,7 +19,7 @@ function MarkdownContent({ content }: { content: string }) {
                 {processInlineMarkdown(item)}
               </li>
             ))}
-          </ul>
+          </ul>,
         );
         listItems = [];
       }
@@ -40,7 +40,7 @@ function MarkdownContent({ content }: { content: string }) {
         parts.push(
           <strong key={key++} className="font-semibold">
             {match[1]}
-          </strong>
+          </strong>,
         );
         lastIndex = match.index + match[0].length;
       }
@@ -57,21 +57,21 @@ function MarkdownContent({ content }: { content: string }) {
         elements.push(
           <h3 key={idx} className="text-base font-bold mt-3 mb-2">
             {processInlineMarkdown(line.slice(4))}
-          </h3>
+          </h3>,
         );
       } else if (line.startsWith("## ")) {
         flushList();
         elements.push(
           <h2 key={idx} className="text-lg font-bold mt-4 mb-2">
             {processInlineMarkdown(line.slice(3))}
-          </h2>
+          </h2>,
         );
       } else if (line.startsWith("# ")) {
         flushList();
         elements.push(
           <h1 key={idx} className="text-xl font-bold mt-4 mb-3">
             {processInlineMarkdown(line.slice(2))}
-          </h1>
+          </h1>,
         );
       } else if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
         listItems.push(line.trim().slice(2));
@@ -83,7 +83,7 @@ function MarkdownContent({ content }: { content: string }) {
         elements.push(
           <p key={idx} className="mb-2">
             {processInlineMarkdown(line)}
-          </p>
+          </p>,
         );
       } else {
         flushList();
@@ -163,7 +163,7 @@ export default function SidePanel() {
       } catch (e) {
         if (attempt === retries) {
           throw new Error(
-            "Failed to get response from Gemini. Please try again."
+            "Failed to get response from Gemini. Please try again.",
           );
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -235,7 +235,7 @@ export default function SidePanel() {
               const className =
                 el.className || el.parentElement?.className || "";
               const langMatch = className.match(
-                /language-(\w+)|lang-(\w+)|highlight-(\w+)/
+                /language-(\w+)|lang-(\w+)|highlight-(\w+)/,
               );
               const language = langMatch
                 ? langMatch[1] || langMatch[2] || langMatch[3]
