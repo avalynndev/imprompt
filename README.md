@@ -1,12 +1,14 @@
-# ⚡ Imprompt
+# Imprompt
 
 > **Enhance your AI prompts. Converse with any webpage. All in one Chrome extension.**
+
+> This extention was made using chrome's build in AI. So this extention will not work for any other browser except chrome.
 
 **Imprompt** transforms how you interact with AI and the web.  
 It seamlessly integrates with **ChatGPT**, **Claude**, and **Gemini**, giving you tools to **refine prompts** instantly.  
 Beyond that, Imprompt also introduces an **AI-powered side panel** that lets you **ask questions about any webpage** — summaries, facts, insights, or ideas — directly within your browser.
 
-# 🧠 Two Powerful Features
+# Two Powerful Features
 
 ### 1️⃣ Prompt Enhancer (for AI chat websites)
 
@@ -54,30 +56,16 @@ Imprompt reads visible content on the page and responds contextually — giving 
 
 # Installation
 
-### From Source
+### From Zip
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/avalynndev/imprompt.git
-   cd imprompt
-   ```
-
-2. Clone the repository:
-
-   ```bash
-   bun i
-   bun run build
-   ```
-
-3. Open Chrome and navigate to:
-
+1. Head over to https://github.com/avalynndev/imprompt/releases, and download `chrome-mv3-prod.zip` from the latest version of imprompt.
+2. Uncompress the zip then open Chrome and navigate to:
    ```
    chrome://extensions/
    ```
 
-4. Enable **Developer mode**.
-5. Click **Load unpacked** → select the `imprompt` folder.
+2. Enable **Developer mode**.
+4. Click **Load unpacked** → select the `imprompt` folder that you unzipped.
 
 ### From Source
 
