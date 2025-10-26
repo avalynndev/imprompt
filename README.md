@@ -5,7 +5,7 @@
 > This extention was made using chrome's build in AI. So this extention will not work for any other browser except chrome.
 
 **Imprompt** transforms how you interact with AI and the web.  
-It seamlessly integrates with **ChatGPT**, **Claude**, and **Gemini**, giving you tools to **refine prompts** instantly.  
+It works with **ChatGPT**, **Claude**, and **Gemini**, by adding a button to **refine prompts** instantly.  
 Beyond that, Imprompt also introduces an **AI-powered side panel** that lets you **ask questions about any webpage** — summaries, facts, insights, or ideas — directly within your browser.
 
 # Two Powerful Features
