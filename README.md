@@ -1,138 +1,109 @@
 # Imprompt
 
-> **Enhance your AI prompts. Converse with any webpage. All in one Chrome extension.**
+**Better AI prompts + chat with any webpage. One Chrome extension.**
 
-> This extention was made using chrome's build in AI. So this extention will not work for any other browser except chrome.
+> Only works on Chrome btw (uses Chrome's built-in AI).
 
-**Imprompt** transforms how you interact with AI and the web.  
-It works with **ChatGPT**, **Claude**, and **Gemini**, by adding a button to **refine prompts** instantly.  
-Beyond that, Imprompt also introduces an **AI-powered side panel** that lets you **ask questions about any webpage** — summaries, facts, insights, or ideas — directly within your browser.
+Imprompt does two things:
+1. Makes your ChatGPT/Claude/Gemini prompts way better with one click
+2. Lets you ask questions about any webpage you're on
 
-# Two Powerful Features
+## What It Does
 
-### 1️⃣ Prompt Enhancer (for AI chat websites)
+### Prompt Enhancer
 
-Adds an “**Enhance Prompt**” button directly on:
+Adds an "Enhance" button to ChatGPT, Claude, and Gemini. Click it, your prompt gets better. That's it.
 
-- [ChatGPT](https://chat.openai.com)
-- [Claude](https://claude.ai)
-- [Gemini](https://gemini.google.com)
+**Example:**
+- You type: "Write a poem"
+- Imprompt makes it: "Write a short free-verse poem inspired by starlight and loneliness"
 
-**How it works:**
+### Chat with Webpages
 
-- You write a prompt as usual.
-- Click **Enhance Prompt**.
-- Imprompt refines it in real time — improving clarity, depth, and context.
-- Submit the enhanced version to get smarter, more precise responses.
+Open the side panel, ask questions about whatever page you're on:
+- "What's the main point here?"
+- "Summarize this in 3 bullets"
+- "Turn this into a tweet"
 
-✨ _Example:_  
-| Task | Before | After (with Imprompt) |
-|------|---------|------------------------|
-| Summarization | “Summarize this text.” | “Summarize this article focusing on tone, key arguments, and conclusion.” |
-| Creative Writing | “Write a poem.” | “Write a short free-verse poem inspired by starlight and loneliness.” |
+No tab switching needed.
 
----
+## Cool Features
 
-### 2️⃣ Site Analyzer (for any webpage)
+- **Prompt Enhancer** – Rewrites your prompts so AI gives you better answers
+- **Site Analyzer Panel** – Have a conversation with any webpage
+- **Smart Suggestions** – Get real-time tips to make your prompts clearer
+- **Context Memory** – Remembers your last question so you can keep the conversation going
+- **Works Everywhere** – ChatGPT, Claude, and Gemini all supported
+- **Privacy First** – Everything runs locally on your computer—no servers, no tracking, zero data collection
 
-Activate Imprompt’s **AI side panel** on any site.  
-Ask natural questions like:
+## How to Install
 
-- “What’s the main point of this article?”
-- “Summarize this page in 3 bullet points.”
-- “List all dates and names mentioned.”
-- “Turn this blog post into a LinkedIn caption.”
+### Option 1: Download the Zip
 
-Imprompt reads visible content on the page and responds contextually — giving you insights, summaries, or rewrites without switching tabs.
+1. Go to https://github.com/avalynndev/imprompt/releases and grab `chrome-mv3-prod.zip` from the latest release
+2. Unzip it somewhere on your computer
+3. Open Chrome and type `chrome://extensions/` in the address bar
+4. Turn on **Developer mode** (there's a toggle in the top right)
+5. Click **Load unpacked** and choose the folder you just unzipped
 
-# Features
+### Option 2: Build from Source
 
-- **Prompt Enhancer:** Rewrite prompts intelligently for better AI results.
-- **Site Analyzer Panel:** Chat with webpages, get summaries, or extract structured info.
-- **Smart Suggestions:** Real-time tips to improve clarity, tone, or creativity.
-- **Context Memory:** Remembers your last interaction for continuity.
-- **Multi-Platform:** Works across ChatGPT, Claude, and Gemini.
-- **Privacy-Friendly:** 100% local — no servers, no tracking, no data collection.
+If you're into that sort of thing:
 
-# Installation
+```bash
+git clone https://github.com/avalynndev/imprompt.git
+cd imprompt
+bun i
+bun run build
+```
 
-### From Zip
+Then follow steps 3-5 from above.
 
-1. Head over to https://github.com/avalynndev/imprompt/releases, and download `chrome-mv3-prod.zip` from the latest version of imprompt.
-2. Uncompress the zip then open Chrome and navigate to:
-   ```
-   chrome://extensions/
-   ```
+### Option 3: Chrome Web Store (Coming Soon!)
 
-2. Enable **Developer mode**.
-4. Click **Load unpacked** → select the `imprompt` folder that you unzipped.
+We're working on getting it listed in the Chrome Web Store so you can install it with one click. Stay tuned!
 
-### From Source
+## How to Use It
 
-1. Clone the repository:
+### Making Your Prompts Better
 
-   ```bash
-   git clone https://github.com/avalynndev/imprompt.git
-   cd imprompt
-   ```
+1. Head to ChatGPT, Claude, or Gemini
+2. Start typing your prompt
+3. Click the Imprompt button that appears in the input box
+4. Check out the enhanced version (you can still edit it if you want)
+5. Hit send and enjoy the better response!
 
-2. Clone the repository:
+### Chatting with Webpages
 
-   ```bash
-   bun i
-   bun run build
-   ```
+1. Click the Imprompt icon in your Chrome toolbar
+2. Hit the **Analyze Page** button
+3. The side panel slides open
+4. Ask away! The AI will answer based on what's on the current page
 
-3. Open Chrome and navigate to:
+## What We Built It With
 
-   ```
-   chrome://extensions/
-   ```
+- **React + Plasmo** for the extension framework
+- **TypeScript** for all the logic and scripts
+- **Shadcn + Tailwind CSS** to make it look clean and modern
+- **Chrome Manifest V3** because that's what Chrome wants these days
 
-4. Enable **Developer mode**.
-5. Click **Load unpacked** → select the `imprompt` folder.
+## Why Does It Need Permissions?
 
-### From Chrome Web Store (coming soon)
+| Permission | Why we need it |
+|------------|----------------|
+| `activeTab`, `tabs`, `scripting` | So we can read and interact with the webpage you're looking at |
+| `storage` | To save your preferences and settings on your computer |
+| `sidePanel` | To show you the chat interface in your browser |
 
-Once live, you’ll be able to install Imprompt in one click from the Chrome Web Store.
+## What's Next?
 
-# How to Use
-
-### 🪄 Prompt Enhancer
-
-1. Open ChatGPT, Claude, or Gemini.
-2. Type your prompt as usual.
-3. Click the **Imprompt button** inside the input box.
-4. Review or edit the enhanced prompt before sending.
-
-### 🧭 Site Analyzer
-
-1. Click the **Imprompt extension icon** in your Chrome toolbar.
-2. Click the **Analyze Page** button.
-3. The **side panel** opens.
-4. Ask questions about the current webpage — Imprompt responds instantly.
-
-## Tech Stack
-
-- **React + Plasmo** – Core extension framework
-- **TypeScript** – Logic & content scripts, background service workers
-- **Shadcn + Tailwindcss** – Minimal, modern interface styling
-- **Chrome Manifest V3** – Secure, performant extension framework
-
-## Permissions
-
-| Permission                       | Purpose                                                   |
-| -------------------------------- | --------------------------------------------------------- |
-| `activeTab`, `tabs`, `scripting` | To analyze and interact with the current webpage.         |
-| `storage`                        | To remember preferences, settings, and templates locally. |
-| `sidePanel`                      | For the in-browser conversation UI.                       |
-
-## To Do
-
-- [ ] 🗣️ Add speech-to-text for prompt entry
-- [ ] 🌍 Support for Perplexity, Copilot, and more AI tools
+- [ ] Add speech-to-text so you can just talk instead of type
+- [ ] Make it work with Perplexity, Copilot, and other AI tools
 
 ## License
 
-Licensed under the **MIT License**.  
-See [LICENSE](LICENSE) for more information.
+This project is licensed under the MIT License. Check out the [LICENSE](LICENSE) file if you want the details.
+
+---
+
+Found a bug? Have an idea? Feel free to open an issue or contribute on GitHub!
